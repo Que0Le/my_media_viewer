@@ -20,6 +20,10 @@ MEDIA_PATH = ""
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="./public"), name="static")
 
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return FileResponse("./public/favicon_io/favicon.ico")
+
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
@@ -44,14 +48,23 @@ async def get_file_response():
 
 @app.get("/media/{filename}")
 async def get_media_file(filename: str):
-    return FileResponse(f"{MEDIA_PATH}/{filename}")
+    if filename.split(".")[-1] in type_media:
+        return FileResponse(f"{MEDIA_PATH}/{filename}")
+    else:
+        return None
+
+@app.get("/json/{filename}")
+async def get_json_file(filename: str):
+    if filename.split(".")[-1] == "json":
+        return FileResponse(f"{MEDIA_PATH}/{filename}")
+    else:
+        return None
 
 @app.get("/get-media-list")
 async def get_file_response():
     list_dir = listdir(MEDIA_PATH)
     only_medias = [f for f in list_dir if isfile(join(MEDIA_PATH, f)) and f.split(".")[-1] in type_media]
     only_jsons = [f for f in list_dir if isfile(join(MEDIA_PATH, f)) and f.split(".")[-1] == "json"]
-    print(only_jsons)
 
     media_list = []
     for m in only_medias:
@@ -60,9 +73,9 @@ async def get_file_response():
         entry["filename"] = m
         #
         temp_json = m.rsplit('.', maxsplit=1)[0] + ".info.json"
-        print(temp_json)
         if temp_json in only_jsons:
             entry["embed_json_file"] = temp_json
+            
         media_list.append(entry)
 
     return media_list
