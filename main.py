@@ -1,4 +1,4 @@
-import os, sys, random
+import os, sys, random, json
 from os import listdir
 from os.path import isfile, join
 
@@ -74,8 +74,11 @@ async def get_file_response():
         #
         temp_json = m.rsplit('.', maxsplit=1)[0] + ".info.json"
         if temp_json in only_jsons:
-            entry["embed_json_file"] = temp_json
-            
+            with open(join(MEDIA_PATH, temp_json)) as f:
+                try:
+                    entry["embed_json_file"] = json.load(f)
+                except Exception as e:
+                    print(e)
         media_list.append(entry)
 
     return media_list
